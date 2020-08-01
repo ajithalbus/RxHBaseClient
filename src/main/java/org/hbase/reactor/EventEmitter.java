@@ -33,6 +33,4 @@ public class EventEmitter {
             return ex;
         });
     }
-
-
 }

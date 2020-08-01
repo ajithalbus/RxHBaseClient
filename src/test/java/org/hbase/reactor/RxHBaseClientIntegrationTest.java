@@ -1,5 +1,7 @@
 package org.hbase.reactor;
 
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.hbase.async.GetRequest;
 import org.hbase.async.HBaseClient;
 import org.hbase.async.KeyValue;
@@ -11,18 +13,19 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author ajith.km
  */
-class RxHBaseClientTest {
-    //Field client of type HBaseClient - was not mocked since Mockito doesn't mock a Final class when 'mock-maker-inline' option is not set
+class RxHBaseClientIntegrationTest {
+
     RxHBaseClient rxHBaseClient = new RxHBaseClient(new HBaseClient("localhost"));
-    String testTable = "fk_sp_cms_listing_data_namespace";
-    String testKey = "LSTABBEUPJ7PESH967CCCU3IH";
+    String testTable = "test";
+    String testKey = "50";
 
     String dummyTable = "dummy_table";
+
+    // TODO Add tests for other operations.
 
     @Test
     void testEnsureTableExistsHappyPath() {
@@ -41,14 +44,14 @@ class RxHBaseClientTest {
     @Test
     void testGet() {
         Mono<ArrayList<KeyValue>> result = rxHBaseClient.get(new GetRequest(testTable, testKey));
-        StepVerifier.create(result).assertNext(row -> Assertions.assertEquals(41, row.size(), "Invalid Row")).verifyComplete();
+        StepVerifier.create(result).assertNext(row -> Assertions.assertEquals(1, row.size(), "Invalid Row")).verifyComplete();
     }
 
     @Test
+    @SneakyThrows
     void testScan() {
-        Flux<List<KeyValue>> result = rxHBaseClient.newScanner(testTable).scan();
-        StepVerifier.create(result).expectNextCount(94).verifyComplete();
+
+        Flux<ArrayList<KeyValue>> result = rxHBaseClient.newScanner(testTable).scan();
+        StepVerifier.create(result).expectNextCount(50).verifyComplete();
     }
 }
-
-//Generated with love by TestMe :) Please report issues and submit feature requests at: http://weirddev.com/forum#!/testme

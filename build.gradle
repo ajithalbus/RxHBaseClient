@@ -16,6 +16,7 @@ dependencies {
     compile group: 'io.projectreactor.addons', name: 'reactor-extra', version: '3.3.0.RELEASE'
     compile group: 'org.hbase', name:'asynchbase', version: '1.8.2'
     compileOnly 'org.projectlombok:lombok:1.18.12'
+    implementation group: 'org.slf4j', name : 'slf4j-simple', version: '1.7.25'
     annotationProcessor 'org.projectlombok:lombok:1.18.12'
 
     testCompileOnly 'org.projectlombok:lombok:1.18.12'

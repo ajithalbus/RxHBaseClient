@@ -6,7 +6,7 @@ import org.hbase.async.KeyValue;
 import org.hbase.async.Scanner;
 import reactor.core.publisher.Flux;
 
-import java.util.List;
+import java.util.ArrayList;
 
 /**
  * @author ajith.km
@@ -16,8 +16,13 @@ public class RxHBaseScanner {
 
     private final Scanner scanner;
 
-    public Flux<List<KeyValue>> scan() {
+    public Flux<ArrayList<KeyValue>> scan() {
 
-        throw new UnsupportedOperationException("This method is not implemented!");
+        return Flux.create(emitter -> {
+
+            EventNotifier<ArrayList<KeyValue>> eventNotifier = EventNotifier.from(scanner::nextRows, emitter::next, emitter::complete, emitter::error);
+            emitter.onRequest(eventNotifier::request);
+            emitter.onCancel(eventNotifier::cancel);
+        });
     }
 }
