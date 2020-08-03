@@ -1,7 +1,6 @@
 package org.hbase.reactor;
 
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.hbase.async.GetRequest;
 import org.hbase.async.HBaseClient;
 import org.hbase.async.KeyValue;
@@ -19,7 +18,7 @@ import java.util.ArrayList;
  */
 class RxHBaseClientIntegrationTest {
 
-    RxHBaseClient rxHBaseClient = new RxHBaseClient(new HBaseClient("localhost"));
+    RxHBaseClient rxHBaseClient = new RxHBaseClient(new HBaseClient("intergration.hbase.host"));
     String testTable = "test";
     String testKey = "50";
 
