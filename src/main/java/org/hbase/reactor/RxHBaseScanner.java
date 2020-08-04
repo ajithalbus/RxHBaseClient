@@ -18,11 +18,15 @@ public class RxHBaseScanner {
 
     public Flux<ArrayList<KeyValue>> scan() {
 
-        return Flux.create(emitter -> {
+        Flux<ArrayList<KeyValue>> scanFlux = Flux.create(emitter -> {
 
             EventNotifier<ArrayList<KeyValue>> eventNotifier = EventNotifier.from(scanner::nextRows, emitter::next, emitter::complete, emitter::error);
             emitter.onRequest(eventNotifier::request);
             emitter.onCancel(eventNotifier::cancel);
         });
+
+        return scanFlux.doOnComplete(scanner::close).
+                doOnError(err -> scanner.close()).
+                doOnCancel(scanner::close);
     }
 }

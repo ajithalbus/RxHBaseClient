@@ -11,6 +11,9 @@ import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Exchanger;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -35,10 +38,21 @@ public class EventNotifier<T> {
     private AtomicLong backlog = new AtomicLong(0);
     private long pumped = 0;
 
+    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(EXECUTOR::shutdownNow));
+    }
+
     private Exchanger<Queue<T>> pipe = new Exchanger<>();
+
+    private Future<?> pumpHandle;
+    private Future<?> drainHandle;
 
     public void cancel() {
         killed = true;
+        pumpHandle.cancel(true);
+        drainHandle.cancel(true);
     }
 
     @SneakyThrows
@@ -117,13 +131,14 @@ public class EventNotifier<T> {
 
         open();
         backlog.addAndGet(ask);
+        // TODO : sync this countdown.
         faucet.countDown();
     }
 
     private void open() {
         if (!opened) {
-            new Thread(this::pump, "pumper").start();
-            new Thread(this::drain, "drainer").start();
+            pumpHandle = EXECUTOR.submit(this::pump);
+            drainHandle = EXECUTOR.submit(this::drain);
             opened = true;
         }
     }
