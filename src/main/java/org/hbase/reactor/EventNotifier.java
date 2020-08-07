@@ -30,12 +30,13 @@ public class EventNotifier<T> {
     private final Consumer<Throwable> clog;
 
     private CountDownLatch faucet = new CountDownLatch(1);
+    private final Object faucetMutex = new Object();
 
     private boolean opened = false;
     private boolean closed = false;
     private boolean killed = false;
 
-    private AtomicLong backlog = new AtomicLong(0);
+    private final AtomicLong backlog = new AtomicLong(0);
     private long pumped = 0;
 
     private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
@@ -53,6 +54,19 @@ public class EventNotifier<T> {
         killed = true;
         pumpHandle.cancel(true);
         drainHandle.cancel(true);
+    }
+
+    private void openFaucet() {
+        synchronized (faucetMutex) {
+            faucet.countDown();
+        }
+    }
+
+    private void closeFaucet() throws InterruptedException {
+        synchronized (faucetMutex) {
+            faucet = new CountDownLatch(1);
+            faucet.await();
+        }
     }
 
     @SneakyThrows
@@ -73,8 +87,7 @@ public class EventNotifier<T> {
             if (backlog.get() == 0) {
                 // no backlog so stopping discharge for now.
                 // Scanner lease could expire meanwhile.
-                faucet = new CountDownLatch(1);
-                faucet.await();
+                closeFaucet();
             }
         }
 
@@ -102,6 +115,7 @@ public class EventNotifier<T> {
 
                 Queue<T> buffer = Queues.newArrayDeque();
 
+                // If notifier killed or scanner closed
                 if (killed || batch == null || batch.isEmpty()) {
                     closed = true;
                     pipe.exchange(buffer);
@@ -131,8 +145,7 @@ public class EventNotifier<T> {
 
         open();
         backlog.addAndGet(ask);
-        // TODO : sync this countdown.
-        faucet.countDown();
+        openFaucet();
     }
 
     private void open() {

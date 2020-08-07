@@ -1,7 +1,5 @@
 package org.hbase.reactor;
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.hbase.async.GetRequest;
 import org.hbase.async.HBaseClient;
 import org.hbase.async.KeyValue;
@@ -48,7 +46,6 @@ class RxHBaseClientIntegrationTest {
     }
 
     @Test
-    @SneakyThrows
     void testScan() {
 
         Flux<ArrayList<KeyValue>> result = rxHBaseClient.newScanner(testTable).scan();
